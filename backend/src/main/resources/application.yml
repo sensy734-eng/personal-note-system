@@ -1,0 +1,20 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/note_system?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+    username: root
+    password: ""
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    # update ?????????????????? (??????????????)
+    hibernate:
+      ddl-auto: update
+    show-sql: true # ????? SQL ???????
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+
+# 🚀 新增：头像上传物理路径配置
+file:
+  upload-path: E:/idea project/demo/uploads/
