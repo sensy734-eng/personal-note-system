@@ -1,4 +1,4 @@
-package com.example.notesystem; // 移除了末尾多余的点
+package com.example.notesystem;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
