@@ -6,7 +6,7 @@ frontend/dist/
 backend/target/
 *.class
 
-# 忽略本地配置文件
+# 忽略本地配置
 .idea/
 .vscode/
 *.log
