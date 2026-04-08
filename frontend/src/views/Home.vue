@@ -250,7 +250,6 @@ const handleMenuSelect = (i) => {
   if (i !== 'statistics') fetchNotes();
 };
 
-// ...其余导出、登录、样式切换逻辑保持不变
 const handleSingleExport = (id) => window.open(`http://localhost:8080/api/notes/${id}/export?type=md&token=${localStorage.getItem('token')}`);
 const handleBatchExport = () => window.open(`http://localhost:8080/api/notes/export/category?categoryId=${currentFilter.value.split('_')[1]}&type=md&token=${localStorage.getItem('token')}`);
 const saveProfile = async () => {
