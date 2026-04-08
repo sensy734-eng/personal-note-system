@@ -36,9 +36,6 @@ public class NoteController {
     @Autowired
     private SearchLogRepository searchLogRepository;
 
-    // ==========================================
-    // 1. 列表检索 (增强：自动记录搜索日志)
-    // ==========================================
     @GetMapping
     public ResponseEntity<?> getNotes(
             HttpServletRequest request,
@@ -52,7 +49,6 @@ public class NoteController {
 
         Long userId = ((Number) request.getAttribute("userId")).longValue();
 
-        // 🚀 补充细节：记录搜索关键词
         if (keyword != null && !keyword.trim().isEmpty()) {
             SearchLog log = new SearchLog();
             log.setUserId(userId);
@@ -65,24 +61,18 @@ public class NoteController {
         return ResponseEntity.ok(Map.of("message", "获取成功", "data", notes));
     }
 
-    // ==========================================
-    // 2. 彻底删除 (3.4 模块补充细节点)
-    // ==========================================
     @DeleteMapping("/{id}/permanent")
     public ResponseEntity<?> permanentDeleteNote(HttpServletRequest request, @PathVariable Long id) {
         Long userId = ((Number) request.getAttribute("userId")).longValue();
         Optional<Note> opt = noteRepository.findById(id);
 
         if (opt.isPresent() && opt.get().getUserId().equals(userId)) {
-            noteRepository.deleteById(id); // 物理删除
+            noteRepository.deleteById(id); 
             return ResponseEntity.ok(Map.of("message", "笔记已永久删除"));
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 
-    // ==========================================
-    // 3. 原有功能全量保留 (导出、标签、最近访问等)
-    // ==========================================
     @GetMapping("/tags")
     public ResponseEntity<?> getUserTags(HttpServletRequest request) {
         Long userId = ((Number) request.getAttribute("userId")).longValue();
