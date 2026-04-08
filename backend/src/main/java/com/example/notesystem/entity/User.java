@@ -18,7 +18,7 @@ public class User {
     private String username;
 
     @Column(nullable = false, length = 100)
-    private String email; // 新增字段
+    private String email; 
 
     @Column(nullable = false)
     private String password;
