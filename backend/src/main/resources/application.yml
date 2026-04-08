@@ -17,4 +17,5 @@ spring:
 
 # 🚀 新增：头像上传物理路径配置
 file:
-  upload-path: E:/idea project/demo/uploads/
+  //自行填写路径
+  upload-path: 
