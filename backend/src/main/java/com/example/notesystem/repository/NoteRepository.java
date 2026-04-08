@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface NoteRepository extends JpaRepository<Note, Long> {
 
-    // 🚀 核心加强：支持多维度筛选（含标签检索）
+    // 支持多维度筛选（含标签检索）
     // 使用 Native Query 处理多表关联，支持按标签名、关键词、分类、星标、日期多重组合筛选
     @Query(value = "SELECT DISTINCT n.* FROM notes n " +
             "LEFT JOIN note_tags nt ON n.id = nt.note_id " +
