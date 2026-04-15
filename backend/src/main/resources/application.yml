@@ -17,5 +17,5 @@ spring:
 
 # 🚀 新增：头像上传物理路径配置
 file:
-  //自行填写路径
-  upload-path: 
+  # 如果系统环境变量中没有 UPLOAD_DIR，则默认使用后面的路径
+  upload-path: ${UPLOAD_DIR:D:/uploads/}
