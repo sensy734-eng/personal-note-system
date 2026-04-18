@@ -43,7 +43,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 允许所有路径
-                .allowedOriginPatterns("*") // 开发阶段允许所有来源，生产环境建议填 Vercel 的域名
+                .allowedOriginPatterns(System.getenv("FRONTEND_URL"), "http://localhost:5173")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 允许的 HTTP 方法
                 .allowedHeaders("*") // 允许的请求头
                 .allowCredentials(true) // 允许携带 Cookie (如果用到)
