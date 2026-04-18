@@ -15,7 +15,10 @@ spring:
     show-sql: true # ????? SQL ???????
     database-platform: org.hibernate.dialect.MySQL8Dialect
 
-# 🚀 新增：头像上传物理路径配置
 file:
-  //自行填写路径
-  upload-path: 
+  # 优化：使用相对路径或 Linux 临时目录，避免 E:/ 这种 Windows 路径
+  upload-path: ${UPLOAD_PATH:/tmp/uploads/}
+
+# 优化：新增一个变量用于存储图片访问的域名
+app:
+  image-base-url: ${IMAGE_BASE_URL:http://localhost:8080/uploads/}
