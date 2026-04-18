@@ -25,3 +25,19 @@ EXPOSE 8080
 
 # 启动命令
 ENTRYPOINT ["java", "-jar", "app.jar"]
+# ... 前面保持不变 ...
+
+# 运行阶段
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+
+# 优化：创建一个上传目录防止权限问题
+RUN mkdir -p /tmp/uploads && chmod 777 /tmp/uploads
+
+# 优化：增加 JVM 内存限制和时区设置
+ENTRYPOINT ["java", \
+            "-Xmx300m", \
+            "-Duser.timezone=GMT+08", \
+            "-Djava.security.egd=file:/dev/./urandom", \
+            "-jar", "app.jar"]
