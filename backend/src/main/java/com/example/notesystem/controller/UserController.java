@@ -19,7 +19,8 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
+// 🚀 注意：跨域已在 WebConfig 中全局配置，这里可以去掉 origins = "*" 以免冲突
+@CrossOrigin
 public class UserController {
 
     @Autowired
@@ -28,15 +29,18 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    // 🚀 修正：所有配置注入都放在类顶层
     @Value("${file.upload-path}")
     private String uploadPath;
 
-    // 🚀 修改：注册接口增加对 email 的支持
+    @Value("${app.image-base-url}")
+    private String imageBaseUrl;
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> form) {
         String username = form.get("username");
         String password = form.get("password");
-        String email = form.get("email"); // 获取邮箱
+        String email = form.get("email");
 
         Map<String, Object> result = userService.register(username, password, email);
 
@@ -60,7 +64,6 @@ public class UserController {
         }
     }
 
-    // 🚀 新增：密码找回/重置接口
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> form) {
         String username = form.get("username");
@@ -97,22 +100,20 @@ public class UserController {
 
         Long userId = ((Number) request.getAttribute("userId")).longValue();
 
+        // 确保文件夹存在
         File folder = new File(uploadPath);
         if (!folder.exists()) folder.mkdirs();
 
         String originalFilename = file.getOriginalFilename();
-        String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String suffix = originalFilename != null ? originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
         String fileName = UUID.randomUUID().toString() + suffix;
 
         try {
             file.transferTo(new File(folder, fileName));
 
             User user = userRepository.findById(userId).orElseThrow();
-            // 建议在 UserController 中注入配置
-            @Value("${app.image-base-url}")
-            private String imageBaseUrl;
             
-            // 在 uploadAvatar 方法中拼接
+            // 🚀 直接使用类顶层注入的 imageBaseUrl
             String avatarUrl = imageBaseUrl + fileName;
             user.setAvatar(avatarUrl);
             userRepository.save(user);
