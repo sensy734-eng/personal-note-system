@@ -108,7 +108,12 @@ public class UserController {
             file.transferTo(new File(folder, fileName));
 
             User user = userRepository.findById(userId).orElseThrow();
-            String avatarUrl = "http://localhost:8080/uploads/" + fileName;
+            // 建议在 UserController 中注入配置
+            @Value("${app.image-base-url}")
+            private String imageBaseUrl;
+            
+            // 在 uploadAvatar 方法中拼接
+            String avatarUrl = imageBaseUrl + fileName;
             user.setAvatar(avatarUrl);
             userRepository.save(user);
 
