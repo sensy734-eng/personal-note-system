@@ -3,7 +3,8 @@ import { ElMessage } from 'element-plus'; // 引入 Element Plus 的消息提示
 
 // 创建 axios 实例
 const service = axios.create({
-    baseURL: 'http://localhost:8080/api', // 确保你的后端地址无误
+    // 优化：生产环境使用云端 API 地址，开发环境使用本地代理
+    baseURL: import.meta.env.VITE_API_BASE_URL || '/api', 
     timeout: 5000
 });
 
