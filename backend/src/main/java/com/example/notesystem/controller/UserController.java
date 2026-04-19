@@ -20,7 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/auth")
 // 注意：如果你已经在 WebConfig 里配置了全局 CORS，这里的 @CrossOrigin 可以省略
-@CrossOrigin(origins = "*")
+
 public class UserController {
 
     @Autowired
