@@ -48,14 +48,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
 import { User, Lock, Message, CircleCheck } from '@element-plus/icons-vue';
 import request from '../utils/request';
 
 const router = useRouter();
-const mode = ref('login'); // 模式：login, register, reset
+// 🚀 修正 1：初始化时检查 URL Hash，解决刷新回登录页的问题
+const mode = ref(window.location.hash === '#register' ? 'register' : 'login'); 
 const loading = ref(false);
 const formRef = ref(null);
 
@@ -91,9 +92,10 @@ const rules = {
   ]
 };
 
-// 切换模式
+// 🚀 修正 2：切换模式时同步修改地址栏 Hash
 const switchMode = (targetMode) => {
   mode.value = targetMode;
+  window.location.hash = targetMode === 'register' ? 'register' : (targetMode === 'reset' ? 'reset' : '');
   if (formRef.value) formRef.value.resetFields();
 };
 
@@ -116,26 +118,42 @@ const handleSubmit = () => {
         url = '/auth/reset-password';
       }
 
+      // 发起请求
       const res = await request.post(url, data);
-      ElMessage.success(res.message);
+      
+      // 成功提示
+      ElMessage.success(res.message || '操作成功');
 
       if (mode.value === 'login') {
+        // 登录成功逻辑
         localStorage.setItem('token', res.token);
         localStorage.setItem('userInfo', JSON.stringify(res.user));
         router.push('/');
       } else {
-        // 注册或重置成功后，返回登录模式
-        mode.value = 'login';
+        // 🚀 修正 3：注册或重置成功后，不仅改变 mode，还要清除 Hash 变回登录状态
+        switchMode('login');
         form.password = '';
         form.newPassword = '';
       }
     } catch (error) {
-      ElMessage.error(error.response?.data?.message || '操作失败，请重试');
+      // 这里的错误会被 request.js 的拦截器捕获并弹出提示，
+      // 如果你想在这里做额外处理可以继续写逻辑
+      console.error('请求出错:', error);
     } finally {
       loading.value = false;
     }
   });
 };
+
+// 监听浏览器前进后退（可选优化）
+onMounted(() => {
+  window.addEventListener('hashchange', () => {
+    const currentHash = window.location.hash;
+    if (currentHash === '#register') mode.value = 'register';
+    else if (currentHash === '#reset') mode.value = 'reset';
+    else mode.value = 'login';
+  });
+});
 </script>
 
 <style scoped>
