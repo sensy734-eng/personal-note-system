@@ -5,7 +5,7 @@ import { ElMessage } from 'element-plus'; // 引入 Element Plus 的消息提示
 const service = axios.create({
     // 优化：生产环境使用云端 API 地址，开发环境使用本地代理
     baseURL: import.meta.env.VITE_API_BASE_URL || '/api', 
-    timeout: 5000
+    timeout: 60000
 });
 
 // 🚀 请求拦截器：负责在每次请求前“塞入” Token
