@@ -8,6 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+/**
+ * 身份验证拦截器
+ * 负责解析 JWT Token 并将用户 ID 注入请求上下文
+ */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
@@ -16,37 +20,53 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 放行跨域预检请求 (OPTIONS)
+        
+        // 🚀 1. 核心修复：放行跨域预检请求 (OPTIONS)
+        // 浏览器在发起跨域 POST 请求前会先发 OPTIONS 请求，如果不放行会导致 403 Forbidden
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
 
-        // 🚀 修复：优先从 Header 获取，如果没有则从 URL 参数获取 (用于导出功能)
+        // 2. Token 提取逻辑
         String token = null;
         String authHeader = request.getHeader("Authorization");
 
+        // 优先从 Header 获取 (格式: Bearer <token>)
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
         } else {
-            // 尝试从 URL 参数获取 token
+            // 备选方案：从 URL 参数获取 (用于文件下载或某些特殊跳转场景)
             token = request.getParameter("token");
         }
 
+        // 3. 校验 Token 是否存在
         if (token == null || token.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"message\": \"Missing or invalid token\"}");
+            sendErrorResponse(response, "Missing or invalid token");
             return false;
         }
 
         try {
+            // 4. 解析 Token
             Claims claims = jwtUtil.parseToken(token);
-            // 将解析出来的 userId 存入 request，方便后面的 Controller 直接使用！
+            
+            // 5. 注入上下文：将 userId 存入 request 作用域
+            // 后面的 Controller 可以通过 (Long)request.getAttribute("userId") 直接获取
             request.setAttribute("userId", claims.get("userId"));
             return true;
+            
         } catch (Exception e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"message\": \"Token expired or invalid\"}");
+            // 6. 处理 Token 过期或非法的情况
+            sendErrorResponse(response, "Token expired or invalid");
             return false;
         }
+    }
+
+    /**
+     * 辅助方法：返回标准化的 JSON 错误信息
+     */
+    private void sendErrorResponse(HttpServletResponse response, String message) throws Exception {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(String.format("{\"message\": \"%s\"}", message));
     }
 }
