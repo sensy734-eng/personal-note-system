@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: personal-note-backend
+    runtime: docker
+    rootDir: backend
+    plan: free
+    envVars:
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        value: note_system
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: UPLOAD_PATH
+        value: /tmp/uploads/
+      - key: IMAGE_BASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

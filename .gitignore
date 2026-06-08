@@ -1,0 +1,17 @@
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+
+# Backend build output and local Maven cache
+backend/target/
+backend/.maven-cache/
+*.class
+
+# Local IDE and logs
+.idea/
+.vscode/
+*.log
+frontend/.env.production
+
+# Uploaded user files
+uploads/
