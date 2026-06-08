@@ -22,7 +22,10 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             AND (:isStarred IS NULL OR n.isStarred = :isStarred)
             AND (:startDate IS NULL OR n.updatedAt >= :startDate)
             AND (:endDate IS NULL OR n.updatedAt <= :endDate)
-            AND (:tagName IS NULL OR :tagName IS NOT NULL)
+            AND (:tagName IS NULL OR EXISTS (
+                SELECT 1 FROM NoteTag nt, Tag t
+                WHERE nt.noteId = n.id AND t.id = nt.tagId AND t.userId = :userId AND t.name = :tagName
+            ))
             ORDER BY n.isStarred DESC, n.updatedAt DESC
             """)
     List<Note> findByFilters(
@@ -44,7 +47,10 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             AND (:isStarred IS NULL OR n.isStarred = :isStarred)
             AND (:startDate IS NULL OR n.updatedAt >= :startDate)
             AND (:endDate IS NULL OR n.updatedAt <= :endDate)
-            AND (:tagName IS NULL OR :tagName IS NOT NULL)
+            AND (:tagName IS NULL OR EXISTS (
+                SELECT 1 FROM NoteTag nt, Tag t
+                WHERE nt.noteId = n.id AND t.id = nt.tagId AND t.userId = :userId AND t.name = :tagName
+            ))
             ORDER BY n.isStarred DESC, n.updatedAt DESC
             """)
     Page<Note> findPageByFilters(
