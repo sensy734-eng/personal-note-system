@@ -70,7 +70,7 @@ public class NoteController {
         PageRequest pageRequest = PageRequest.of(safePage - 1, safeSize);
 
         Page<Note> notePage = noteRepository.findPageByFilters(
-                userId, status, blankToNull(keyword), categoryId, isStarred, startDate, endDate, blankToNull(tagName), pageRequest);
+                userId, status, blankToNull(keyword), categoryId, isStarred, startDate, endOfDay(endDate), blankToNull(tagName), pageRequest);
 
         return ResponseEntity.ok(Map.of(
                 "message", "获取成功",
@@ -254,5 +254,16 @@ public class NoteController {
 
     private String blankToNull(String value) {
         return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    private Date endOfDay(Date value) {
+        if (value == null) return null;
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(value);
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        calendar.set(Calendar.MILLISECOND, 999);
+        return calendar.getTime();
     }
 }
