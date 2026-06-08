@@ -2,27 +2,38 @@ package com.example.notesystem.controller;
 
 import com.example.notesystem.entity.Category;
 import com.example.notesystem.entity.Note;
+import com.example.notesystem.entity.SearchLog;
 import com.example.notesystem.repository.CategoryRepository;
 import com.example.notesystem.repository.NoteRepository;
 import com.example.notesystem.repository.SearchLogRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/statistics")
-
 public class StatisticsController {
 
     @Autowired
     private NoteRepository noteRepository;
+
     @Autowired
     private CategoryRepository categoryRepository;
+
     @Autowired
     private SearchLogRepository searchLogRepository;
 
@@ -33,42 +44,75 @@ public class StatisticsController {
         List<Note> activeNotes = noteRepository.findByUserIdAndStatus(userId, 1);
         List<Category> categories = categoryRepository.findByUserIdOrderByCreatedAtAsc(userId);
 
-        // 1. 基础面板
         long totalNotes = activeNotes.size();
-        long totalStarred = activeNotes.stream().filter(n -> n.getIsStarred() == 1).count();
+        long totalStarred = activeNotes.stream().filter(n -> Integer.valueOf(1).equals(n.getIsStarred())).count();
         long totalCategories = categories.size();
 
-        // 2. 分类占比
-        Map<Long, String> categoryNameMap = categories.stream().collect(Collectors.toMap(Category::getId, Category::getName));
-        Map<String, Long> categoryCount = new HashMap<>();
+        Map<Long, String> categoryNameMap = categories.stream()
+                .collect(Collectors.toMap(Category::getId, Category::getName));
+        Map<String, Long> categoryCount = new LinkedHashMap<>();
         long uncategorizedCount = 0;
         for (Note note : activeNotes) {
             if (note.getCategoryId() != null && categoryNameMap.containsKey(note.getCategoryId())) {
-                categoryCount.put(categoryNameMap.get(note.getCategoryId()), categoryCount.getOrDefault(categoryNameMap.get(note.getCategoryId()), 0L) + 1);
-            } else { uncategorizedCount++; }
+                String name = categoryNameMap.get(note.getCategoryId());
+                categoryCount.put(name, categoryCount.getOrDefault(name, 0L) + 1);
+            } else {
+                uncategorizedCount++;
+            }
         }
-        if (uncategorizedCount > 0) categoryCount.put("未分类", uncategorizedCount);
-        List<Map<String, Object>> pieData = new ArrayList<>();
-        categoryCount.forEach((name, count) -> { Map<String, Object> map = new HashMap<>(); map.put("name", name); map.put("value", count); pieData.add(map); });
+        if (uncategorizedCount > 0) {
+            categoryCount.put("未分类", uncategorizedCount);
+        }
 
-        // 3. 近7天趋势
+        List<Map<String, Object>> pieData = new ArrayList<>();
+        categoryCount.forEach((name, count) -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("name", name);
+            item.put("value", count);
+            pieData.add(item);
+        });
+
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd");
         Map<String, Integer> dateCountMap = new LinkedHashMap<>();
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -6);
-        for (int i = 0; i < 7; i++) { dateCountMap.put(sdf.format(cal.getTime()), 0); cal.add(Calendar.DAY_OF_YEAR, 1); }
-        for (Note note : activeNotes) { if (note.getCreatedAt() != null) { String ds = sdf.format(note.getCreatedAt()); if (dateCountMap.containsKey(ds)) dateCountMap.put(ds, dateCountMap.get(ds) + 1); } }
+        for (int i = 0; i < 7; i++) {
+            dateCountMap.put(sdf.format(cal.getTime()), 0);
+            cal.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        for (Note note : activeNotes) {
+            Date createdAt = note.getCreatedAt();
+            if (createdAt != null) {
+                String dateKey = sdf.format(createdAt);
+                if (dateCountMap.containsKey(dateKey)) {
+                    dateCountMap.put(dateKey, dateCountMap.get(dateKey) + 1);
+                }
+            }
+        }
 
-        // 🚀 4. 新增：高频搜索词统计
-        List<Map<String, Object>> hotKeywords = searchLogRepository.findTopKeywords(userId);
+        List<SearchLog> logs = searchLogRepository.findByUserId(userId);
+        Map<String, Long> keywordCounts = logs.stream()
+                .filter(log -> log.getKeyword() != null && !log.getKeyword().isBlank())
+                .collect(Collectors.groupingBy(SearchLog::getKeyword, Collectors.counting()));
+        List<Map<String, Object>> hotKeywords = keywordCounts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder()))
+                .limit(10)
+                .map(entry -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("name", entry.getKey());
+                    item.put("value", entry.getValue());
+                    return item;
+                })
+                .collect(Collectors.toList());
 
-        // 🚀 5. 新增：活跃时段分布 (0-23点)
-        List<Map<String, Object>> rawHourly = searchLogRepository.findHourlyDistribution(userId);
         int[] hourlyStats = new int[24];
-        for (Map<String, Object> m : rawHourly) {
-            int h = ((Number) m.get("hour")).intValue();
-            int c = ((Number) m.get("count")).intValue();
-            if (h >= 0 && h < 24) hourlyStats[h] = c;
+        Calendar hourCalendar = Calendar.getInstance();
+        for (Note note : activeNotes) {
+            Date createdAt = note.getCreatedAt();
+            if (createdAt != null) {
+                hourCalendar.setTime(createdAt);
+                hourlyStats[hourCalendar.get(Calendar.HOUR_OF_DAY)]++;
+            }
         }
 
         Map<String, Object> res = new HashMap<>();

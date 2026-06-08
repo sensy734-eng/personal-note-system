@@ -18,7 +18,7 @@ service.interceptors.request.use(
     config => {
         const token = localStorage.getItem('token');
         if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
@@ -29,8 +29,7 @@ service.interceptors.response.use(
     response => response.data,
     error => {
         if (error.response) {
-            const status = error.response.status;
-            if (status === 401) {
+            if (error.response.status === 401) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('userInfo');
                 ElMessage.error('登录状态已过期，请重新登录');
@@ -38,11 +37,10 @@ service.interceptors.response.use(
                     window.location.href = '/login';
                 }, 500);
             } else {
-                const errorMsg = error.response.data?.message || '请求失败，请稍后重试';
-                ElMessage.error(errorMsg);
+                ElMessage.error(error.response.data?.message || '请求失败，请稍后重试');
             }
         } else {
-            ElMessage.error('网络连接异常，无法连接到服务器');
+            ElMessage.error('无法连接到服务器，请确认后端服务已启动');
         }
         return Promise.reject(error);
     }

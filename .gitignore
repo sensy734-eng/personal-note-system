@@ -7,10 +7,16 @@ backend/target/
 backend/.maven-cache/
 *.class
 
+# Local demo/runtime caches
+.npm-cache/
+mysql-data/
+tools/
+
 # Local IDE and logs
 .idea/
 .vscode/
 *.log
+logs/
 frontend/.env.production
 
 # Uploaded user files

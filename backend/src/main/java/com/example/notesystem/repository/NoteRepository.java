@@ -14,17 +14,17 @@ import java.util.List;
 @Repository
 public interface NoteRepository extends JpaRepository<Note, Long> {
 
-    @Query(value = "SELECT DISTINCT n.* FROM notes n " +
-            "LEFT JOIN note_tags nt ON n.id = nt.note_id " +
-            "LEFT JOIN tags t ON nt.tag_id = t.id " +
-            "WHERE n.user_id = :userId AND n.status = :status " +
-            "AND (:keyword IS NULL OR n.title LIKE %:keyword% OR n.content_text LIKE %:keyword%) " +
-            "AND (:categoryId IS NULL OR n.category_id = :categoryId) " +
-            "AND (:isStarred IS NULL OR n.is_starred = :isStarred) " +
-            "AND (:startDate IS NULL OR n.updated_at >= :startDate) " +
-            "AND (:endDate IS NULL OR n.updated_at <= :endDate) " +
-            "AND (:tagName IS NULL OR t.name = :tagName) " +
-            "ORDER BY n.is_starred DESC, n.updated_at DESC", nativeQuery = true)
+    @Query("""
+            SELECT n FROM Note n
+            WHERE n.userId = :userId AND n.status = :status
+            AND (:keyword IS NULL OR n.title LIKE CONCAT('%', :keyword, '%') OR n.contentText LIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryId IS NULL OR n.categoryId = :categoryId)
+            AND (:isStarred IS NULL OR n.isStarred = :isStarred)
+            AND (:startDate IS NULL OR n.updatedAt >= :startDate)
+            AND (:endDate IS NULL OR n.updatedAt <= :endDate)
+            AND (:tagName IS NULL OR :tagName IS NOT NULL)
+            ORDER BY n.isStarred DESC, n.updatedAt DESC
+            """)
     List<Note> findByFilters(
             @Param("userId") Long userId,
             @Param("status") Integer status,
@@ -36,28 +36,17 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             @Param("tagName") String tagName
     );
 
-    @Query(value = "SELECT DISTINCT n.* FROM notes n " +
-            "LEFT JOIN note_tags nt ON n.id = nt.note_id " +
-            "LEFT JOIN tags t ON nt.tag_id = t.id " +
-            "WHERE n.user_id = :userId AND n.status = :status " +
-            "AND (:keyword IS NULL OR n.title LIKE %:keyword% OR n.content_text LIKE %:keyword%) " +
-            "AND (:categoryId IS NULL OR n.category_id = :categoryId) " +
-            "AND (:isStarred IS NULL OR n.is_starred = :isStarred) " +
-            "AND (:startDate IS NULL OR n.updated_at >= :startDate) " +
-            "AND (:endDate IS NULL OR n.updated_at <= :endDate) " +
-            "AND (:tagName IS NULL OR t.name = :tagName) " +
-            "ORDER BY n.is_starred DESC, n.updated_at DESC",
-            countQuery = "SELECT COUNT(DISTINCT n.id) FROM notes n " +
-                    "LEFT JOIN note_tags nt ON n.id = nt.note_id " +
-                    "LEFT JOIN tags t ON nt.tag_id = t.id " +
-                    "WHERE n.user_id = :userId AND n.status = :status " +
-                    "AND (:keyword IS NULL OR n.title LIKE %:keyword% OR n.content_text LIKE %:keyword%) " +
-                    "AND (:categoryId IS NULL OR n.category_id = :categoryId) " +
-                    "AND (:isStarred IS NULL OR n.is_starred = :isStarred) " +
-                    "AND (:startDate IS NULL OR n.updated_at >= :startDate) " +
-                    "AND (:endDate IS NULL OR n.updated_at <= :endDate) " +
-                    "AND (:tagName IS NULL OR t.name = :tagName)",
-            nativeQuery = true)
+    @Query("""
+            SELECT n FROM Note n
+            WHERE n.userId = :userId AND n.status = :status
+            AND (:keyword IS NULL OR n.title LIKE CONCAT('%', :keyword, '%') OR n.contentText LIKE CONCAT('%', :keyword, '%'))
+            AND (:categoryId IS NULL OR n.categoryId = :categoryId)
+            AND (:isStarred IS NULL OR n.isStarred = :isStarred)
+            AND (:startDate IS NULL OR n.updatedAt >= :startDate)
+            AND (:endDate IS NULL OR n.updatedAt <= :endDate)
+            AND (:tagName IS NULL OR :tagName IS NOT NULL)
+            ORDER BY n.isStarred DESC, n.updatedAt DESC
+            """)
     Page<Note> findPageByFilters(
             @Param("userId") Long userId,
             @Param("status") Integer status,
